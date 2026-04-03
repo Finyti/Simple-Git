@@ -1,0 +1,8 @@
+name: simple_git
+description: A git-like version control system
+version: 0.0.1 
+environment:
+  sdk: '^3.11.0'
+
+dev_dependencies:
+  test: ^1.31.0
