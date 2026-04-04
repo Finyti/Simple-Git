@@ -1,7 +1,5 @@
-import 'dart:io';
+import '../lib/src/cli.dart' as cli;
 
-void main() {
-  print("Hi!");
-  String? name = stdin.readLineSync();
-  print("Hi!");
+void main(List<String> arguments) {
+  cli.runCommand(arguments);
 }
