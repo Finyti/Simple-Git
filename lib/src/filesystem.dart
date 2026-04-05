@@ -11,7 +11,10 @@ void createFolder(String targetPath, String name) {
 
 void createFile(String targetPath, String name, {var content = ''}) {
   try {
-    new File(path.join(targetPath, name)).create(recursive: true);
+    new File(path.join(targetPath, name)).createSync(recursive: true);
+    if (content != '') {
+      File(path.join(targetPath, name)).writeAsStringSync(content);
+    }
   } catch (err) {
     print("Cant create file for $targetPath \n Error: $err");
   }
@@ -22,11 +25,22 @@ dynamic readFile(String targetPath, String name) {
   return fileContent;
 }
 
-void updateFile(String targetPath, String name, var newContent) {}
+void writeFile(String targetPath, String name, var newContent) {
+  if (newContent is String) {
+    File(path.join(targetPath, name)).writeAsString(newContent);
+  } else {
+    File(path.join(targetPath, name)).writeAsBytes(newContent);
+  }
+}
 
 bool doesPathExist(String targetPath) {
-  bool checkPathExistence = Directory(targetPath).existsSync();
-  bool checkFileExistence = File(targetPath).existsSync();
+  return isADirectory(targetPath) || isAFile(targetPath);
+}
 
-  return checkPathExistence || checkFileExistence;
+bool isADirectory(String targetPath) {
+  return Directory(targetPath).existsSync();
+}
+
+bool isAFile(String targetPath) {
+  return Directory(targetPath).existsSync();
 }

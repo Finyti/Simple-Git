@@ -3,7 +3,8 @@ import 'package:path/path.dart' as path;
 import 'service.dart' as service;
 
 const Map<String, void Function(List<String>)> functionsMap = {
-  "init": initializeRepo,
+  "init": init,
+  "add": add,
 };
 
 // --- ENTRYPOINT
@@ -22,13 +23,23 @@ void runCommand(List<String> input) {
 
 // --- MAIN FUNCTIONS
 
-void initializeRepo(List<String> arguments) {
+void init(List<String> arguments) {
   String initLocation = Directory.current.path;
   if (!arguments.isEmpty) {
     initLocation = formulateGlobalPath(arguments.last, Directory.current.path);
   }
 
-  service.init(initLocation);
+  service.initializeARepo(initLocation);
+}
+
+void add(List<String> arguments) {
+  List<String> pathsToAdd = [];
+  for (String arg in arguments) {
+    if (arg[0] != "-") {
+      pathsToAdd.add(formulateGlobalPath(arg, Directory.current.path));
+    }
+  }
+  service.addToIndex(pathsToAdd);
 }
 
 // --- HELPERS
