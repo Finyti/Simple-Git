@@ -1,12 +1,17 @@
-import 'package:simple_git/src/Objects/GenericObject.dart';
+import 'object_id.dart';
 
-class TreeEntry extends GenericObject {
-  @override
-  String typeName = "treeentry";
+class TreeEntry {
+  final String typeName = "treeentry";
+  List<int> objectIdBytes;
 
   int mode;
   String objectName;
 
-  TreeEntry(super.objectIdBytes, this.mode, this.objectName);
-  
+  TreeEntry(this.objectIdBytes, this.mode, this.objectName);
+
+  List<int> get getIdBytes => objectIdBytes;
+
+  String getIdHashString() {
+    return objectIdToHashString(objectIdBytes);
+  }
 }

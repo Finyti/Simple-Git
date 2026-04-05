@@ -1,9 +1,4 @@
-import 'package:simple_git/src/Objects/GenericObject.dart';
-
-class CommitData extends GenericObject {
-  @override
-  String typeName = 'commit';
-
+class CommitData {
   int payloadSize;
 
   List<List<int>> parentsCommitId;
@@ -12,7 +7,6 @@ class CommitData extends GenericObject {
   String message;
 
   CommitData(
-    super.objectIdBytes,
     this.payloadSize,
     this.parentsCommitId,
     this.author,

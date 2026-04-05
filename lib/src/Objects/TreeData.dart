@@ -1,22 +1,17 @@
-import 'package:simple_git/src/Objects/GenericObject.dart';
-
 import 'TreeEntry.dart';
 
-class TreeData extends GenericObject {
-  @override
-  String typeName = 'tree';
-
+class TreeData {
   int payloadSize;
   List<TreeEntry> entries;
 
-  TreeData(super.objectIdBytes, this.payloadSize, this.entries);
+  TreeData(this.payloadSize, this.entries);
 
   void addEntries(List<TreeEntry> newEntries) {
     entries.addAll(newEntries);
   }
 
   void deleteEntry(int index) {
-    entries.remove(index);
+    entries.removeAt(index);
   }
 
   TreeEntry getEntry(int index) {

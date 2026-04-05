@@ -1,12 +1,18 @@
-import 'package:simple_git/src/Objects/GenericObject.dart';
+import 'object_id.dart';
 
-class IndexEntry extends GenericObject {
-  @override
-  String typeName = 'indexentry';
+class IndexEntry {
+  final String typeName = 'indexentry';
+  List<int> objectIdBytes;
 
   int mode;
   List<int> pathLength;
   List<int> pathBytes;
 
-  IndexEntry(super.objectIdBytes, this.mode, this.pathLength, this.pathBytes);
+  IndexEntry(this.objectIdBytes, this.mode, this.pathLength, this.pathBytes);
+
+  List<int> get getIdBytes => objectIdBytes;
+
+  String getIdHashString() {
+    return objectIdToHashString(objectIdBytes);
+  }
 }

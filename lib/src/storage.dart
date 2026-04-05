@@ -1,8 +1,6 @@
 import 'dart:io';
 import 'package:path/path.dart' as path;
-import 'package:simple_git/src/Objects/BlobData.dart';
 import 'filesystem.dart' as fs;
-import 'formatting.dart' as formatting;
 
 /// Checks if a specified path is a repo.
 ///

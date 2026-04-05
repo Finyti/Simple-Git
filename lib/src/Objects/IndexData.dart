@@ -13,7 +13,7 @@ class IndexData {
   }
 
   void deleteEntry(int index) {
-    entries.remove(index);
+    entries.removeAt(index);
   }
 
   IndexEntry getEntry(int index) {

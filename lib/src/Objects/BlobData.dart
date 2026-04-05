@@ -1,9 +1,5 @@
-import 'package:simple_git/src/Objects/GenericObject.dart';
-
-class BlobData extends GenericObject {
-  @override
-  String typeName = "blob";
-
+class BlobData {
   int payloadSize;
-  BlobData(super.objectIdBytes, this.payloadSize);
+
+  BlobData(this.payloadSize);
 }
