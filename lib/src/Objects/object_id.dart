@@ -1,4 +1,6 @@
-String objectIdToHashString(List<int> objectIdBytes) {
+import 'dart:typed_data';
+
+String objectIdToHashString(Uint8List objectIdBytes) {
   String buffer = "";
 
   for (int byte in objectIdBytes) {

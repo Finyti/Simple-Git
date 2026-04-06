@@ -1,16 +1,18 @@
+import 'dart:typed_data';
+
 import 'object_id.dart';
 
 class IndexEntry {
   final String typeName = 'indexentry';
-  List<int> objectIdBytes;
+  Uint8List objectIdBytes;
 
   int mode;
-  List<int> pathLength;
-  List<int> pathBytes;
+  Uint8List pathLength;
+  Uint8List pathBytes;
 
   IndexEntry(this.objectIdBytes, this.mode, this.pathLength, this.pathBytes);
 
-  List<int> get getIdBytes => objectIdBytes;
+  Uint8List get getIdBytes => objectIdBytes;
 
   String getIdHashString() {
     return objectIdToHashString(objectIdBytes);

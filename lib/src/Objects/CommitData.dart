@@ -1,7 +1,9 @@
+import 'dart:typed_data';
+
 class CommitData {
   int payloadSize;
 
-  List<List<int>> parentsCommitId;
+  List<Uint8List> parentsCommitId;
   String author;
   String commiter;
   String message;

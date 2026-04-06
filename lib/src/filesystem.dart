@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:path/path.dart' as path;
 
 void createFolder(String targetPath, String name) {
@@ -13,21 +14,30 @@ void createFile(String targetPath, String name, {var content = ''}) {
   try {
     new File(path.join(targetPath, name)).createSync(recursive: true);
     if (content != '') {
-      File(path.join(targetPath, name)).writeAsStringSync(content);
+      writeFile(targetPath, name, content);
     }
   } catch (err) {
     print("Cant create file for $targetPath \n Error: $err");
   }
 }
 
-dynamic readFile(String targetPath, String name) {
-  dynamic fileContent = '';
-  return fileContent;
+Uint8List readFile(String targetPath) {
+  return File(targetPath).readAsBytesSync();
+}
+
+String readFileString(String targetPath) {
+  return File(targetPath).readAsStringSync();
+}
+
+int getFileSize(String targetPath) {
+  return File(targetPath).lengthSync();
 }
 
 void writeFile(String targetPath, String name, var newContent) {
   if (newContent is String) {
     File(path.join(targetPath, name)).writeAsString(newContent);
+  } else if (newContent is Uint8List) {
+    File(path.join(targetPath, name)).writeAsBytes(newContent.toList());
   } else {
     File(path.join(targetPath, name)).writeAsBytes(newContent);
   }
@@ -42,5 +52,5 @@ bool isADirectory(String targetPath) {
 }
 
 bool isAFile(String targetPath) {
-  return Directory(targetPath).existsSync();
+  return File(targetPath).existsSync();
 }

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:simple_git/src/Objects/Blob.dart';
 import 'package:simple_git/src/Objects/BlobData.dart';
 import 'package:simple_git/src/Objects/Commit.dart';
@@ -11,32 +13,32 @@ import 'package:test/test.dart';
 void main() {
   group('persisted object wrappers', () {
     test('Blob stores id, data, and type name', () {
-      final blob = Blob([0x0a, 0xff], BlobData(123));
+      final blob = Blob(Uint8List.fromList([0x0a, 0xff]), BlobData(123));
 
       expect(blob.typeName, equals('blob'));
-      expect(blob.getIdBytes, equals([0x0a, 0xff]));
+      expect(blob.getIdBytes, equals(Uint8List.fromList([0x0a, 0xff])));
       expect(blob.getIdHashString(), equals('0aff'));
       expect(blob.data.payloadSize, equals(123));
     });
 
     test('Commit stores id, data, and type name', () {
       final commitData = CommitData(55, [
-        [0x01, 0x02],
+        Uint8List.fromList([0x01, 0x02]),
       ], 'author', 'committer', 'message');
-      final commit = Commit([0xab, 0xcd], commitData);
+      final commit = Commit(Uint8List.fromList([0xab, 0xcd]), commitData);
 
       expect(commit.typeName, equals('commit'));
-      expect(commit.getIdBytes, equals([0xab, 0xcd]));
+      expect(commit.getIdBytes, equals(Uint8List.fromList([0xab, 0xcd])));
       expect(commit.getIdHashString(), equals('abcd'));
       expect(commit.data, same(commitData));
     });
 
     test('Tree stores id, data, and type name', () {
       final treeData = TreeData(7, []);
-      final tree = Tree([0x12, 0x34], treeData);
+      final tree = Tree(Uint8List.fromList([0x12, 0x34]), treeData);
 
       expect(tree.typeName, equals('tree'));
-      expect(tree.getIdBytes, equals([0x12, 0x34]));
+      expect(tree.getIdBytes, equals(Uint8List.fromList([0x12, 0x34])));
       expect(tree.getIdHashString(), equals('1234'));
       expect(tree.data, same(treeData));
     });
@@ -44,18 +46,30 @@ void main() {
 
   group('entry objects', () {
     test('TreeEntry keeps object id access and hash conversion', () {
-      final entry = TreeEntry([0xde, 0xad, 0xbe, 0xef], 0100644, 'README.md');
+      final entry = TreeEntry(
+        Uint8List.fromList([0xde, 0xad, 0xbe, 0xef]),
+        0100644,
+        'README.md',
+      );
 
       expect(entry.typeName, equals('treeentry'));
-      expect(entry.getIdBytes, equals([0xde, 0xad, 0xbe, 0xef]));
+      expect(
+        entry.getIdBytes,
+        equals(Uint8List.fromList([0xde, 0xad, 0xbe, 0xef])),
+      );
       expect(entry.getIdHashString(), equals('deadbeef'));
     });
 
     test('IndexEntry keeps object id access and hash conversion', () {
-      final entry = IndexEntry([0xca, 0xfe], 0100644, [0x00, 0x09], [1, 2, 3]);
+      final entry = IndexEntry(
+        Uint8List.fromList([0xca, 0xfe]),
+        0100644,
+        Uint8List.fromList([0x00, 0x09]),
+        Uint8List.fromList([1, 2, 3]),
+      );
 
       expect(entry.typeName, equals('indexentry'));
-      expect(entry.getIdBytes, equals([0xca, 0xfe]));
+      expect(entry.getIdBytes, equals(Uint8List.fromList([0xca, 0xfe])));
       expect(entry.getIdHashString(), equals('cafe'));
     });
   });
@@ -79,7 +93,7 @@ void main() {
 
     test('TreeData remains mutable payload container', () {
       final treeData = TreeData(12, []);
-      final entry = TreeEntry([0x01], 0100644, 'file.txt');
+      final entry = TreeEntry(Uint8List.fromList([0x01]), 0100644, 'file.txt');
 
       treeData.addEntries([entry]);
 
