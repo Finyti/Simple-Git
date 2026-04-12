@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'BlobData.dart';
-import 'object_id.dart';
+
 
 class Blob {
   final String typeName = "blob";
@@ -12,7 +12,5 @@ class Blob {
 
   Uint8List get getIdBytes => objectIdBytes;
 
-  String getIdHashString() {
-    return objectIdToHashString(objectIdBytes);
-  }
+
 }

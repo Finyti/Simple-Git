@@ -1,124 +1,174 @@
-import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:path/path.dart' as path;
 import 'package:simple_git/src/Objects/Blob.dart';
 import 'package:simple_git/src/Objects/BlobData.dart';
-import 'filesystem.dart' as fs;
-import 'formatting.dart' as formatting;
+import 'package:simple_git/src/Objects/IndexData.dart';
 
-/// Checks if a specified path is a repo.
-///
-/// If no path was specified, uses working directory path
-bool isARepo({String targetPath = ""}) {
-  if (targetPath == "") {
-    targetPath = Directory.current.path;
-  }
-  return fs.doesPathExist(path.join(targetPath, ".ssm")) &&
-      fs.doesPathExist(path.join(targetPath, ".ssm", "HEAD"));
-}
+import 'filesystem.dart';
+import 'formatting.dart';
 
-void setupRepository(String setupLocation) {
-  fs.createFile(
-    path.join(setupLocation, ".ssm"),
-    "HEAD",
-    content: path.join("refs", "heads", "main"),
-  );
-  fs.createFile(path.join(setupLocation, ".ssm", "refs", "heads"), "main");
-  fs.createFolder(path.join(setupLocation, ".ssm", "refs"), "tags");
-  fs.createFolder(path.join(setupLocation, ".ssm"), "objects");
-}
+/// Acts as an intermediate layer between actual filesystem and logic of the app
+class Storage {
+  Storage({
+    Filesystem? filesystem,
+    Formatting? formatting,
+    String? rootDirectory,
+  }) : filesystem = filesystem ?? Filesystem(),
+       formatting = formatting ?? Formatting(),
+       rootDirectory = rootDirectory ?? Directory.current.path;
 
-/// Returns whether a path leads to directory, file, or nothing
-///
-/// Returns strings:
-///
-/// File -> 'file'
-/// Directory -> 'directory'
-/// None -> ''
-String typeOfPathTarget(String targetPath) {
-  if (fs.isAFile(targetPath)) {
-    return 'file';
-  } else if (fs.isADirectory(targetPath)) {
-    return 'directory';
-  }
-  return '';
-}
+  final Filesystem filesystem;
+  final Formatting formatting;
+  final String rootDirectory;
 
-Blob createABlob(String targetPath, String directoryRoot) {
-  int fileSize = fs.getFileSize(targetPath);
-  Uint8List fileData = fs.readFile(targetPath);
-  BlobData newBlobData = new BlobData(fileSize);
-
-  Uint8List rawBytes = formatting.formatBlob(newBlobData, fileData);
-  Uint8List hashId = formatting.hashBytes(rawBytes);
-
-  Blob newBlob = new Blob(hashId, newBlobData);
-
-  String newBlobIdString = newBlob.getIdHashString();
-
-  // TODO: Make a function for determening the repo root
-
-  fs.createFile(
-    path.join(
-      directoryRoot,
-      ".ssm",
-      "objects",
-      newBlobIdString.substring(0, 2),
-    ),
-    newBlobIdString.substring(2),
-    content: rawBytes,
-  );
-
-  return newBlob;
-}
-
-/// Helper function that reads contents of HEAD file in .ssm folder.
-///
-/// It assumes that repositoryRoot, is indeed a repository.
-///
-/// It returns String that is a path to a current branch, but can also just return it's name by using onlyBranchName flag.
-String readHead(String repositoryRoot, {bool onlyBranchName = false}) {
-  String head = fs.readFileString(path.join(repositoryRoot, ".ssm", "HEAD"));
-  if (onlyBranchName) {
-    String branch = head.split(Platform.pathSeparator).last;
-    return branch;
-  }
-  return head;
-}
-
-/// Function that determines if a path is a directory, or any of the parent paths are.
-///
-/// Returns path to closest repository root of the specified path.
-///
-/// If path is not specified, working directory selected as starting point
-///
-/// If no root was found, empty string is returned
-String getRepositoryRoot({String startLocation = ''}) {
-  if (startLocation == '') {
-    startLocation = Directory.current.path;
-  }
-  if (isARepo(targetPath: startLocation)) {
-    return startLocation;
+  /// Returns true if a path is a Repo.
+  ///
+  /// Optional Input:
+  ///   targetPath - specifies where to check
+  ///
+  /// If no targetPath was specified, assumes working directory
+  bool isARepo({String targetPath = ''}) {
+    if (targetPath == '') {
+      targetPath = rootDirectory;
+    }
+    return filesystem.doesPathExist(path.join(targetPath, '.ssm')) &&
+        filesystem.doesPathExist(path.join(targetPath, '.ssm', 'HEAD'));
   }
 
-  List<String> pathSegments = startLocation.split(Platform.pathSeparator);
-  if (pathSegments.length <= 1) {
+  /// Creates .ssm dir. and its file structure
+  ///
+  /// Optional Input:
+  ///   setupLocation - specifies where to setup
+  ///
+  /// If no setupLocation was specifies, assumes working directory
+  void setupRepository({String setupLocation = ''}) {
+    if (setupLocation == '') {
+      setupLocation = rootDirectory;
+    }
+    filesystem.createFile(
+      path.join(setupLocation, '.ssm'),
+      'HEAD',
+      content: path.join('refs', 'heads', 'main'),
+    );
+    filesystem.createFile(
+      path.join(setupLocation, '.ssm', 'refs', 'heads'),
+      'main',
+    );
+    filesystem.createFolder(path.join(setupLocation, '.ssm', 'refs'), 'tags');
+    filesystem.createFolder(path.join(setupLocation, '.ssm'), 'objects');
+    createEmptyIndexFile();
+  }
+
+  /// Returns string with the type of a specified path
+  ///
+  /// Required Input:
+  ///   targetPath - path to check
+  ///
+  /// Returns: either: "file", "directory", or empty string if neither
+  String typeOfPathTarget(String targetPath) {
+    if (filesystem.isAFile(targetPath)) {
+      return 'file';
+    } else if (filesystem.isADirectory(targetPath)) {
+      return 'directory';
+    }
     return '';
   }
 
-  int depthIndex = pathSegments.length - 1;
-  while (depthIndex > 1) {
-    String parentDirectory = pathSegments
-        .getRange(0, pathSegments.length)
-        .join(Platform.pathSeparator);
-    if (isARepo(targetPath: parentDirectory)) {
-      return parentDirectory;
-    }
-    depthIndex -= 1;
+  /// Creates blob object in filesystem and returns its representation in Blob class
+  ///
+  /// Required Input:
+  ///   targetPath - path to the file that needs to be recorded as blob
+  ///
+  /// Returns: new Blob class object
+  Blob createABlob(String targetPath) {
+    int fileSize = filesystem.getFileSize(targetPath);
+    Uint8List fileData = filesystem.readFile(targetPath);
+    BlobData newBlobData = BlobData(fileSize);
+
+    Uint8List rawBytes = formatting.encodeBlob(newBlobData, fileData);
+    Uint8List hashId = formatting.hashBytes(rawBytes);
+
+    Blob newBlob = Blob(hashId, newBlobData);
+
+    String newBlobIdString = formatting.objectIdToHashString(
+      newBlob.getIdBytes,
+    );
+
+    filesystem.createFile(
+      path.join(
+        rootDirectory,
+        '.ssm',
+        'objects',
+        newBlobIdString.substring(0, 2),
+      ),
+      newBlobIdString.substring(2),
+      content: rawBytes,
+    );
+
+    return newBlob;
   }
 
-  return '';
-}
+  /// Creates or rewrites Index file in repo with empty structure. Called during setup of repo or after commit
+  ///
+  void createEmptyIndexFile() {
+    final emptyIndexBytes = formatting.encodeIndex(IndexData([]));
+    filesystem.createFile(
+      path.join(rootDirectory, '.ssm'),
+      'index',
+      content: emptyIndexBytes,
+    );
+  }
 
-// List<String> collectFiles(String pathToDirectory) {}
+  /// Returns relative (to repos root) path to the current branch
+  ///
+  /// Optional input:
+  ///   onlyBranchName - flag for a function to return only the name of the branch
+  String readHead({bool onlyBranchName = false}) {
+    String head = filesystem.readFileString(
+      path.join(rootDirectory, '.ssm', 'HEAD'),
+    );
+    if (onlyBranchName) {
+      String branch = head.split(Platform.pathSeparator).last;
+      return branch;
+    }
+    return head;
+  }
+
+  /// Returns List of global paths to all files inside all provided paths
+  ///
+  /// Required Input:
+  ///   potentialPaths - List of global paths to files and directories
+  ///
+  /// Special char "." is supported. If "." is included withing potentialPaths, it will treat it as path to repos root
+  ///
+  /// Returns: List of global paths to all collected files
+  List<String> collectAddableFiles(List<String> potentialPaths) {
+    List<String> collectedFiles = [];
+    for (String targetPath in potentialPaths) {
+      if (typeOfPathTarget(targetPath) == '') {
+        print('Skipping invalid path ${targetPath}');
+        continue;
+      }
+      if (targetPath == '.') {
+        collectedFiles += filesystem.collectFiles(rootDirectory);
+        continue;
+      }
+      if (typeOfPathTarget(targetPath) == 'directory') {
+        if (targetPath.startsWith(rootDirectory)) {
+          collectedFiles += filesystem.collectFiles(targetPath);
+        }
+        continue;
+      }
+      if (typeOfPathTarget(targetPath) == 'file') {
+        if (targetPath.startsWith(rootDirectory)) {
+          collectedFiles.add(targetPath);
+        }
+        continue;
+      }
+    }
+
+    return collectedFiles;
+  }
+}

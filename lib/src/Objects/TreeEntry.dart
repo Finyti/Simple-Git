@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'object_id.dart';
+
 
 class TreeEntry {
   final String typeName = "treeentry";
@@ -13,7 +13,5 @@ class TreeEntry {
 
   Uint8List get getIdBytes => objectIdBytes;
 
-  String getIdHashString() {
-    return objectIdToHashString(objectIdBytes);
-  }
+
 }

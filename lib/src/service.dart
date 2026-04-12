@@ -1,83 +1,62 @@
 import 'dart:io';
 
+import 'package:simple_git/src/Objects/IndexData.dart';
 import 'package:simple_git/src/Objects/Status.dart';
+import 'package:simple_git/src/domain.dart';
 
-import 'storage.dart' as storage;
+import 'storage.dart';
 
-final String rootDirectory = Directory.current.path;
-// TODO: But what if initLocation is a file? Find a way to find a repo root (if pwd is root, if not err)
+/// Orchestrates requested behavior, using provided data
+class Service {
+  Service({Storage? storage, Domain? domain, String? rootDirectory})
+    : storage = storage ?? Storage(),
+      domain = domain ?? Domain(),
+      rootDirectory = rootDirectory ?? Directory.current.path;
 
-/// Function that orchestrates initialization of a repo on a specified path.
-///
-/// Will do nothing in case of already existing repo on specified path.
-///
-/// Invalid path will result in Error.
-void initializeARepo(String initLocation) {
-  if (storage.isARepo(targetPath: initLocation)) {
-    print("Path ${initLocation} is already a repository");
-    return;
+  final Storage storage;
+  final Domain domain;
+  final String rootDirectory;
+
+  /// Orchestrates initialization of a repo.
+  ///
+  /// Required Input: 
+  ///   initLocation - path to initialization location
+  ///
+  /// If repository already exist at path, does nothing.
+  void initializeARepo(String initLocation) {
+    if (storage.isARepo(targetPath: initLocation)) {
+      print('Path ${initLocation} is already a repository');
+      return;
+    }
+
+    storage.setupRepository(setupLocation: initLocation);
   }
 
-  storage.setupRepository(initLocation);
-}
+  /// Orchestrates addition of paths to the index.
+  ///
+  /// Required Input: 
+  ///   pathsToAdd - list of paths to files or directories inside of repo
+  void addToIndex(List<String> pathsToAdd) {
+    if (repositoryStatus().isARepo == false) {
+      print('Cannot add to Index. ${rootDirectory} is not a repository');
+      return;
+    }
 
-void addToIndex(List<String> pathsToAdd) {
-  if (repositoryStatus().isARepo == false) {
-    print("Cannot add to Index. ${rootDirectory} is not a repository");
-    return;
+    List<String> filesToAdd = storage.collectAddableFiles(pathsToAdd);
+    // TODO: figure out what paths are inside of a working dir, and refuse them
+    // TODO Get an index file.
+
+    // filesToAdd = domain.validateAdditionToIndex(rootDirectory, filesToAdd, TODO put here an index file);
   }
 
-  List<String> filesToAdd = collectAddableFiles(pathsToAdd);
-  // for (String targetFilePath in filesToAdd) {
-  //   if (targetPath == '.') {
-  //     addAllToIndex(rootDirectory);
-  //   }
-  //   if (storage.typeOfPathTarget(targetPath) == 'directory') {
-  //     addAllToIndex(targetPath);
-  //   } else if (storage.typeOfPathTarget(targetPath) == 'file') {
-  //     storage.createABlob(targetPath, rootDirectory);
-  //   } else {
-  //     print("Invalid path ${targetPath}");
-  //     return;
-  //   }
-  // }
-}
-
-List<String> collectAddableFiles(potentialPaths) {
-  List<String> collectedFiles = [];
-  for (String targetPath in potentialPaths) {
-    if (storage.typeOfPathTarget(targetPath) == '') {
-      print("Skipping invalid path ${targetPath}");
-      continue;
+  // Collects and returns basic data about repository wrapped in Status object
+  Status repositoryStatus() {
+    Status currentStatus = Status(storage.isARepo());
+    if (currentStatus.isARepo) {
+      currentStatus.branch = storage.readHead(
+        onlyBranchName: true,
+      );
     }
-    if (targetPath == '.') {
-      // collectedFiles += storage.collectFiles(rootDirectory);
-      continue;
-    }
-    if (storage.typeOfPathTarget(targetPath) == 'directory') {
-      if (targetPath.startsWith(rootDirectory)) {
-        // collectedFiles += storage.collectFiles(targetPath);
-      }
-      continue;
-    }
-    if (storage.typeOfPathTarget(targetPath) == 'file') {
-      if (targetPath.startsWith(rootDirectory)) {
-        collectedFiles.add(targetPath);
-      }
-      continue;
-    }
+    return currentStatus;
   }
-
-  return collectedFiles;
-}
-
-Status repositoryStatus() {
-  Status currentStatus = new Status(storage.isARepo());
-  if (currentStatus.isARepo) {
-    currentStatus.branch = storage.readHead(
-      rootDirectory,
-      onlyBranchName: true,
-    );
-  }
-  return currentStatus;
 }

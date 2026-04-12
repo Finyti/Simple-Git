@@ -1,5 +1,5 @@
-import '../lib/src/cli.dart' as cli;
+import '../lib/src/cli.dart';
 
 void main(List<String> arguments) {
-  cli.runCommand(arguments);
+  Cli().runCommand(arguments);
 }

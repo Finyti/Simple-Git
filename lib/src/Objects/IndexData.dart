@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'IndexEntry.dart';
 
 class IndexData {
@@ -18,5 +20,12 @@ class IndexData {
 
   IndexEntry getEntry(int index) {
     return entries[index];
+  }
+
+  List<String> getEntriesPaths() {
+    List<String> entriesPaths = [
+      for (final entry in entries) utf8.decode(entry.pathBytes),
+    ];
+    return entriesPaths;
   }
 }

@@ -9,6 +9,7 @@ import 'package:simple_git/src/Objects/Tree.dart';
 import 'package:simple_git/src/Objects/TreeData.dart';
 import 'package:simple_git/src/Objects/TreeEntry.dart';
 import 'package:test/test.dart';
+import '../lib/src/formatting.dart';
 
 void main() {
   group('persisted object wrappers', () {
@@ -17,7 +18,7 @@ void main() {
 
       expect(blob.typeName, equals('blob'));
       expect(blob.getIdBytes, equals(Uint8List.fromList([0x0a, 0xff])));
-      expect(blob.getIdHashString(), equals('0aff'));
+      expect(Formatting().objectIdToHashString(blob.getIdBytes), equals('0aff'));
       expect(blob.data.payloadSize, equals(123));
     });
 
@@ -29,7 +30,7 @@ void main() {
 
       expect(commit.typeName, equals('commit'));
       expect(commit.getIdBytes, equals(Uint8List.fromList([0xab, 0xcd])));
-      expect(commit.getIdHashString(), equals('abcd'));
+      expect(Formatting().objectIdToHashString(commit.getIdBytes), equals('abcd'));
       expect(commit.data, same(commitData));
     });
 
@@ -39,7 +40,7 @@ void main() {
 
       expect(tree.typeName, equals('tree'));
       expect(tree.getIdBytes, equals(Uint8List.fromList([0x12, 0x34])));
-      expect(tree.getIdHashString(), equals('1234'));
+      expect(Formatting().objectIdToHashString(tree.getIdBytes), equals('1234'));
       expect(tree.data, same(treeData));
     });
   });
@@ -57,7 +58,7 @@ void main() {
         entry.getIdBytes,
         equals(Uint8List.fromList([0xde, 0xad, 0xbe, 0xef])),
       );
-      expect(entry.getIdHashString(), equals('deadbeef'));
+      expect(Formatting().objectIdToHashString(entry.getIdBytes), equals('deadbeef'));
     });
 
     test('IndexEntry keeps object id access and hash conversion', () {
@@ -70,7 +71,7 @@ void main() {
 
       expect(entry.typeName, equals('indexentry'));
       expect(entry.getIdBytes, equals(Uint8List.fromList([0xca, 0xfe])));
-      expect(entry.getIdHashString(), equals('cafe'));
+      expect(Formatting().objectIdToHashString(entry.getIdBytes), equals('cafe'));
     });
   });
 
